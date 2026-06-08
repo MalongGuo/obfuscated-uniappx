@@ -1,0 +1,19 @@
+{
+  "name": "obfuscated-test",
+  "private": true,
+  "type": "module",
+  "description": "uni-starter-x 混淆产物 Web 路由对比测试（Phase1 冒烟 + Phase3 爬链）",
+  "scripts": {
+    "capture:dev-ports": "node scripts/capture-dev-ports.mjs",
+    "test:compare": "node scripts/route-test.mjs --compare --headed",
+    "test:login": "node scripts/route-test.mjs --phase login --headed",
+    "test:smoke": "node scripts/route-test.mjs --phase smoke --headed",
+    "test:crawl": "node scripts/route-test.mjs --phase crawl --headed",
+    "test:loading": "node scripts/loading-style-test.mjs --headless",
+    "test:loading:style": "node scripts/loading-style-test.mjs --headless --style-only",
+    "test:loading:compare": "node scripts/loading-style-test.mjs --compare --headless"
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  }
+}

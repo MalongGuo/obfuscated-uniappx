@@ -1,0 +1,17 @@
+{
+  "project": "../uni-starter-x",
+  "target": "u",
+  "baseA": "auto",
+  "baseB": "auto",
+  "labelA": "source",
+  "labelB": "obfuscated",
+  "mobile": "15002805120",
+  "password": "123456",
+  "headed": true,
+  "device": "iPhone SE (3rd gen)",
+  "windowSize": { "width": 1900, "height": 1100 },
+  "compareParallel": true,
+  "waitEnterBeforeCompare": true,
+  "promptLogin": false,
+  "loginRetryOnFail": true
+}

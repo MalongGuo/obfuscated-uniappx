@@ -1,0 +1,31 @@
+# uni-starter prefixed project directories
+uni-starter-*/
+
+# Obfuscated output
+obfuscated_code/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+
+# Cursor (optional local tooling)
+.cursor/
