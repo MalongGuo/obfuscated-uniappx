@@ -1,0 +1,51 @@
+{
+  "name": "uniapp-x-obfuscator",
+  "version": "0.1.0",
+  "description": "UniApp / UniApp-X source code obfuscation CLI",
+  "type": "module",
+  "bin": {
+    "uniapp-obfuscate": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js",
+    "preload": "node scripts/npm-mode-run.mjs",
+    "preload:clone": "node scripts/npm-mode-run.mjs",
+    "preload:code": "node scripts/npm-mode-run.mjs",
+    "preload:full": "node scripts/npm-mode-run.mjs",
+    "run": "node scripts/npm-mode-run.mjs",
+    "run:clone": "node scripts/npm-mode-run.mjs",
+    "run:code": "node scripts/npm-mode-run.mjs",
+    "run:full": "node scripts/npm-mode-run.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "files": [
+    "dist",
+    "config",
+    "templates"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@babel/generator": "^7.26.0",
+    "@babel/parser": "^7.26.0",
+    "@babel/traverse": "^7.26.0",
+    "@babel/types": "^7.26.0",
+    "@vue/compiler-sfc": "^3.5.13",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "fast-glob": "^3.3.3",
+    "fs-extra": "^11.3.0"
+  },
+  "devDependencies": {
+    "@types/babel__generator": "^7.6.8",
+    "@types/babel__traverse": "^7.20.6",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

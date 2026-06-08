@@ -1,0 +1,8 @@
+{
+  "note": "框架级路径白名单：obfuscated/ 随项目复制到输出目录，复制后只读；路径混淆不重命名 obfuscated/**",
+  "copyExcludeTopLevelDirs": [],
+  "pathPatterns": [
+    "obfuscated",
+    "obfuscated/**"
+  ]
+}

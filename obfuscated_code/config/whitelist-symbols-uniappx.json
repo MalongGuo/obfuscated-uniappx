@@ -1,0 +1,36 @@
+{
+  "lifecycleHooks": [
+    "onLoad", "onShow", "onReady", "onHide", "onUnload",
+    "onPullDownRefresh", "onReachBottom", "onShareAppMessage",
+    "onPageScroll", "onTabItemTap", "onNavigationBarButtonTap",
+    "onBackPress", "onLaunch", "onError", "onThemeChange",
+    "onResize", "onInit", "onSaveExitState",
+    "beforeCreate", "created", "beforeMount", "mounted",
+    "beforeUpdate", "updated", "beforeDestroy", "destroyed",
+    "beforeUnmount", "unmounted", "activated", "deactivated"
+  ],
+  "reservedWords": [
+    "break", "case", "catch", "class", "const", "continue", "debugger",
+    "default", "delete", "do", "else", "export", "extends", "false",
+    "finally", "for", "function", "if", "import", "in", "instanceof",
+    "new", "null", "return", "super", "switch", "this", "throw",
+    "true", "try", "typeof", "var", "void", "while", "with", "yield",
+    "let", "async", "await", "enum", "implements", "interface", "package",
+    "private", "protected", "public", "static", "type", "from", "as"
+  ],
+  "frameworkPrefixes": [
+    "uni.", "plus.", "UTS", "wx.", "getApp", "getCurrentPages"
+  ],
+  "globalBuiltins": [
+    "Math", "JSON", "Object", "Array", "Number", "String", "Boolean", "Date", "RegExp",
+    "Promise", "console", "Map", "Set", "WeakMap", "WeakSet", "Symbol", "BigInt",
+    "Error", "TypeError", "RangeError", "SyntaxError", "ReferenceError",
+    "parseInt", "parseFloat", "isNaN", "isFinite",
+    "decodeURI", "encodeURI", "decodeURIComponent", "encodeURIComponent",
+    "Intl", "Reflect", "ArrayBuffer", "DataView",
+    "Float32Array", "Float64Array", "Int8Array", "Int16Array", "Int32Array",
+    "Uint8Array", "Uint16Array", "Uint32Array",
+    "globalThis", "uni", "plus", "wx", "getApp", "getCurrentPages"
+  ],
+  "keepDollarPrefix": true
+}

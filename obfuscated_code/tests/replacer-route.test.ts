@@ -1,0 +1,71 @@
+import { describe, expect, it } from 'vitest';
+import { applyReplacements, buildContentReplacements } from '../src/path/replacer.js';
+
+describe('route path replacements', () => {
+  it('updates page route without extension', () => {
+    const reps = buildContentReplacements([
+      { from: 'pages/u/home/home', to: 'pages/u/TOKENhome/TOKENhome' },
+    ]);
+    const input = '"pages/u/home/home"';
+    expect(applyReplacements(input, reps)).toBe('"pages/u/TOKENhome/TOKENhome"');
+  });
+
+  it('does not replace root anchor dir imports like ./common/', () => {
+    const reps = buildContentReplacements(
+      [{ from: 'wxcomponents/vant/common', to: 'wxcomponents/vant/TOKENcommon' }],
+      new Set(['common']),
+    );
+    const input = '@import "./common/uni.css";';
+    expect(applyReplacements(input, reps)).toBe('@import "./common/uni.css";');
+  });
+
+  it('updates scoped multi-segment relative imports without pages prefix', () => {
+    const reps = buildContentReplacements([
+      {
+        from: 'pages/template/long-list-perf/mock-data',
+        to: 'pages/TOKENtemplate/TOKENlong-list-perf/TOKENmock-data',
+      },
+      {
+        from: 'pages/template/custom-refresher/refresh-box/refresh-box.uvue',
+        to: 'pages/TOKENtemplate/TOKENcustom-refresher/TOKENrefresh-box/TOKENrefresh-box.uvue',
+      },
+      {
+        from: 'components/uni-collapse/item.type',
+        to: 'components/TOKENuni-collapse/TOKENitem.type',
+      },
+    ]);
+    expect(applyReplacements(
+      "import x from '../template/long-list-perf/mock-data'",
+      reps,
+    )).toBe("import x from '../TOKENtemplate/TOKENlong-list-perf/TOKENmock-data'");
+    expect(applyReplacements(
+      "import y from '../../template/custom-refresher/refresh-box/refresh-box.uvue'",
+      reps,
+    )).toBe("import y from '../../TOKENtemplate/TOKENcustom-refresher/TOKENrefresh-box/TOKENrefresh-box.uvue'");
+    expect(applyReplacements(
+      'import { T } from "../uni-collapse/item.type"',
+      reps,
+    )).toBe('import { T } from "../TOKENuni-collapse/TOKENitem.type"');
+  });
+
+  it('updates same-directory relative imports', () => {
+    const reps = buildContentReplacements([
+      {
+        from: 'pages/API/get-current-pages/component-check-page.uvue',
+        to: 'pages/API/TOKENget-current-pages/TOKENcomponent-check-page.uvue',
+      },
+    ]);
+    const input = "import ComponentCheckPage from './component-check-page.uvue'";
+    expect(applyReplacements(input, reps)).toBe(
+      "import ComponentCheckPage from './TOKENcomponent-check-page.uvue'",
+    );
+  });
+
+  it('updates partially obfuscated page route', () => {
+    const reps = buildContentReplacements([
+      { from: 'pages/u/TOKENhome/home', to: 'pages/u/TOKENhome/TOKENhome' },
+    ]);
+    const input = '"pages/u/TOKENhome/home"';
+    expect(applyReplacements(input, reps)).toBe('"pages/u/TOKENhome/TOKENhome"');
+  });
+});

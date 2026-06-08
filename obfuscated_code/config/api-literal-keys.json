@@ -1,0 +1,9 @@
+{
+  "keys": [
+    "url", "data", "success", "fail", "complete", "header", "headers", "method",
+    "type", "name", "id", "status", "title", "token", "key", "value", "code",
+    "msg", "message", "result", "error", "info", "count", "total", "list",
+    "items", "params", "query", "body", "path", "iconPath", "pagePath", "text",
+    "index", "item", "options", "callback", "handler", "event", "e"
+  ]
+}

@@ -1,8 +1,12 @@
 # uni-starter prefixed project directories
 uni-starter-*/
 
-# Obfuscated output
-obfuscated_code/
+# Obfuscated output (build artifacts only; source is tracked)
+obfuscated_code/node_modules/
+obfuscated_code/dist/
+obfuscated_code/dist-obfuscated/
+obfuscated_code/coverage/
+obfuscated_code/*.log
 
 # macOS
 .DS_Store
