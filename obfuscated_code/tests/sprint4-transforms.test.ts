@@ -358,6 +358,32 @@ export default {
     expect(out).not.toContain('_j');
   });
 
+  it('uni_modules/xsd-request 路径跳过 junk 注入', () => {
+    const code = 'export type XRequest = (url: string) => void;';
+    const parsed = parseScript(
+      code,
+      'typescript',
+      'uni_modules/xsd-request/utssdk/interface.uts',
+    );
+    const config = createDefaultConfig();
+    for (const key of Object.keys(config.features) as Array<keyof typeof config.features>) {
+      config.features[key] = false;
+    }
+    config.features.insertJunkFuncProp = true;
+    config.seed = 'xsd-junk-skip';
+
+    const out = runScriptTransformPipeline(
+      parsed.ast!,
+      new Map(),
+      config,
+      code,
+      undefined,
+      'uni_modules/xsd-request/utssdk/interface.uts',
+    );
+    expect(out).toBe(code);
+    expect(out).not.toContain('_j');
+  });
+
   it('字符串加密替换字面量', () => {
     const code = 'const s = "hello";';
     const parsed = parseScript(code, 'typescript', 'demo.uts');

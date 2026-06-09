@@ -142,7 +142,7 @@ async function processDirectoryRename(
     return { ...empty, skip: { path: fullNorm, reason: '路径白名单' } };
   }
   if (isProtectedPath(fullNorm)) {
-    return { ...empty, skip: { path: fullNorm, reason: '受保护路径（uni_modules/uni-* 或 uni_modules/uts-*）' } };
+    return { ...empty, skip: { path: fullNorm, reason: '受保护路径（uni_modules 官方/UTS 插件）' } };
   }
 
   const newName = obfuscateDirName(dirName, token);

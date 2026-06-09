@@ -70,10 +70,11 @@ describe('isImmutableConfigFile', () => {
 });
 
 describe('isProtectedDirName', () => {
-  it('protects uni-* and uts-* directory names', () => {
+  it('protects uni-*, uts-*, and xsd-request directory names', () => {
     expect(isProtectedDirName('uni-id')).toBe(true);
     expect(isProtectedDirName('uni-icons')).toBe(true);
     expect(isProtectedDirName('uts-runtime')).toBe(true);
+    expect(isProtectedDirName('xsd-request')).toBe(true);
     expect(isProtectedDirName('bottom-wrap')).toBe(false);
     expect(isProtectedDirName('my-plugin')).toBe(false);
   });
@@ -87,11 +88,13 @@ describe('isProtectedName', () => {
 });
 
 describe('isProtectedPath', () => {
-  it('protects uni_modules/uni-* and uni_modules/uts-* trees only', () => {
+  it('protects uni_modules/uni-*, uts-*, and xsd-request trees', () => {
     expect(isProtectedPath('uni_modules/uni-icons')).toBe(true);
     expect(isProtectedPath('uni_modules/uni-icons/components/icon.uvue')).toBe(true);
     expect(isProtectedPath('uni_modules/uts-openSchema')).toBe(true);
     expect(isProtectedPath('uni_modules/uts-openSchema/index.uts')).toBe(true);
+    expect(isProtectedPath('uni_modules/xsd-request')).toBe(true);
+    expect(isProtectedPath('uni_modules/xsd-request/utssdk/index.uts')).toBe(true);
   });
 
   it('does not protect other uni_modules or business paths', () => {
@@ -105,10 +108,11 @@ describe('isProtectedPath', () => {
 });
 
 describe('isUtsPluginPath', () => {
-  it('matches uni_modules/uts-* plugin trees only', () => {
+  it('matches uni_modules/uts-* and xsd-request plugin trees', () => {
     expect(isUtsPluginPath('uni_modules/uts-openSchema')).toBe(true);
     expect(isUtsPluginPath('uni_modules/uts-openSchema/utssdk/interface.uts')).toBe(true);
     expect(isUtsPluginPath('uni_modules/uts-openSystemSettings/utssdk/app-ios/index.uts')).toBe(true);
+    expect(isUtsPluginPath('uni_modules/xsd-request/utssdk/interface.uts')).toBe(true);
     expect(isUtsPluginPath('uni_modules/uni-icons/components/icon.uvue')).toBe(false);
     expect(isUtsPluginPath('components/demo.uvue')).toBe(false);
   });

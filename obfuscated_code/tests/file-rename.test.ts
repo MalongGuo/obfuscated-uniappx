@@ -245,6 +245,25 @@ describe('syncMatchingFilenames', () => {
     await fs.remove(root);
   });
 
+  it('skips uni_modules/xsd-request plugin paths', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'file-rename-xsd-'));
+    const dirAbs = path.join(root, 'uni_modules', 'xsd-request', 'utssdk');
+    await fs.ensureDir(dirAbs);
+    await fs.writeFile(path.join(dirAbs, 'index.uts'), 'export const createXRequest = () => {}');
+
+    const logger = new Logger();
+    const fileRenames = await syncMatchingFilenamesForDir(
+      root,
+      'uni_modules/xsd-request',
+      'uni_modules/TOKENxsd-request',
+      logger,
+    );
+
+    expect(fileRenames).toEqual([]);
+    expect(await fs.pathExists(path.join(dirAbs, 'index.uts'))).toBe(true);
+    await fs.remove(root);
+  });
+
   it('records route renames for ordinary files like tab-bar', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'file-rename-tabbar-'));
     const dirAbs = path.join(root, 'pages', 'TOKENtabBar');
