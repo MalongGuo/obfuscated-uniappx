@@ -1,6 +1,13 @@
 # uniapp-code
 
-UniApp-X 源码混淆工具与 **H5 自动化对比验证** 工作区。混淆器在 `uni-starter-x` 上完成 L1–L4 全层混淆，Playwright 对比测试覆盖路由冒烟、交互爬链与 loading 样式。
+UniApp-X 源码混淆工具与 **H5 自动化对比验证** 工作区。**CSS/JS（`--mode code`）L1–L4 全层混淆** 已通过 Playwright 对比验证（路由冒烟、交互爬链与 loading 样式）；**`--mode clone`** 路径混淆测试尚未通过。
+
+## 测试状态
+
+| 测试项 | 说明 | 状态 |
+|--------|------|------|
+| CSS / JS（`--mode code`） | L1–L4 全层混淆 + H5 对比（路由 / loading） | ✅ 已通过 |
+| Clone（`--mode clone`） | 路径 clone + 静态资源 hash | ❌ 未通过 |
 
 ## 本仓库包含什么
 
@@ -148,8 +155,8 @@ node scripts/capture-dev-ports.mjs \
 
 | 命令 | 作用 |
 |------|------|
-| `run --mode code` | 代码混淆 + uvue/css 资源变换（**uni-starter-x 主流程**） |
-| `run --mode clone` | 路径 clone + 静态资源 hash |
+| `run --mode code` | 代码混淆 + uvue/css 资源变换（**uni-starter-x 主流程，L1–L4 已验证**） |
+| `run --mode clone` | 路径 clone + 静态资源 hash（**测试未通过**） |
 | `run --mode full` | 路径 + 静态 + 代码 + 资源（默认） |
 | `preload --mode <mode>` | 预分析（vocab / symbols / paths 等） |
 | `check / fix` | 产物自查与修复（`--mode` 须与 run 一致） |
