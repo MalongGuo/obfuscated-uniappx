@@ -68,4 +68,37 @@ describe('route path replacements', () => {
     const input = '"pages/u/TOKENhome/home"';
     expect(applyReplacements(input, reps)).toBe('"pages/u/TOKENhome/TOKENhome"');
   });
+
+  it('does not false-match ./basename inside ../../basename', () => {
+    const reps = buildContentReplacements([
+      {
+        from: 'uni_modules/vk-uview-ui/libs/request',
+        to: 'uni_modules/vk-uview-ui/libs/TOKENrequest',
+      },
+    ]);
+    const input = 'import { xRequest } from "../../request"';
+    expect(applyReplacements(input, reps)).toBe(input);
+  });
+
+  it('updates service request imports when service/request is renamed', () => {
+    const reps = buildContentReplacements([
+      { from: 'service/request', to: 'service/TOKENrequest' },
+    ]);
+    const input = 'import { xRequest } from "../../request"';
+    expect(applyReplacements(input, reps)).toBe(
+      'import { xRequest } from "../../TOKENrequest"',
+    );
+  });
+
+  it('updates @/ alias imports when top-level dir is renamed', () => {
+    const reps = buildContentReplacements([
+      { from: 'service/uts/user', to: 'service/uts/TOKENuser' },
+      { from: 'service', to: 'TOKENservice' },
+    ]);
+    const input =
+      'import { treeCategory } from "@/service/uts/user/ai-category.uts"';
+    expect(applyReplacements(input, reps)).toBe(
+      'import { treeCategory } from "@/TOKENservice/uts/TOKENuser/ai-category.uts"',
+    );
+  });
 });

@@ -3,6 +3,7 @@ import { parseScript } from '../src/parser/babel.js';
 import { createDefaultConfig } from '../src/config/defaults.js';
 import { flattenControlFlow } from '../src/transforms/control-flow.js';
 import { runScriptTransformPipeline } from '../src/transforms/script-pipeline.js';
+import { transformVueFileContent } from '../src/transforms/vue-file.js';
 import _generateModule from '@babel/generator';
 
 const generate = (_generateModule.default ?? _generateModule) as (
@@ -47,6 +48,69 @@ function compute(a: number): number {
     flattenControlFlow(parsed.ast!);
     const out = generate(parsed.ast!).code;
     expect(out).not.toMatch(/if\s*\(\s*true\s*\)/);
+  });
+
+  it('Vue Options API computed/methods 不包裹（避免 UTS 编译失败）', () => {
+    const code = `
+export default {
+  computed: {
+    placeholderStyle(): UTSJSONObject {
+      const style = {} as UTSJSONObject;
+      style["a"] = "1";
+      return style;
+    }
+  },
+  methods: {
+    onTap() {
+      const a = 1;
+      const b = 2;
+      return a + b;
+    }
+  },
+  data() {
+    return { count: 0 };
+  }
+};
+`;
+    const parsed = parseScript(code, 'typescript', 'components/bottom-wrap.uvue');
+    flattenControlFlow(parsed.ast!);
+    const out = generate(parsed.ast!).code;
+    expect(out).not.toMatch(/\{if\s*\(\s*true\s*\)/);
+    expect(out).not.toMatch(/if\s*\(\s*true\s*\)/);
+    expect(out).toContain('return style');
+    expect(out).toContain('return a + b');
+  });
+});
+
+describe('transformVueFileContent controlFlowFlatten', () => {
+  it('Vue Options API computed 不出现 {if (true)', () => {
+    const sfc = `<template><view :style="placeholderStyle"></view></template>
+<script lang="uts">
+export default {
+  computed: {
+    placeholderStyle(): UTSJSONObject {
+      const style = {} as UTSJSONObject;
+      if (this.count > 0) {
+        style["height"] = "10px";
+      }
+      return style;
+    }
+  },
+  data() {
+    return { count: 0 };
+  }
+};
+</script>`;
+    const config = createDefaultConfig();
+    for (const key of Object.keys(config.features) as Array<keyof typeof config.features>) {
+      config.features[key] = false;
+    }
+    config.features.controlFlowFlatten = true;
+
+    const out = transformVueFileContent(sfc, 'components/bottom-wrap.uvue', '.uvue', new Map(), config);
+    expect(out).not.toMatch(/\{if\s*\(\s*true\s*\)/);
+    expect(out).not.toMatch(/if\s*\(\s*true\s*\)/);
+    expect(out).toContain('return style');
   });
 });
 

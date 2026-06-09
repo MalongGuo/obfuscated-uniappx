@@ -85,6 +85,7 @@ export function transformVueFileContent(
       config,
       block!.content,
       stringCollector,
+      relativePath,
     );
     if (transformed !== block!.content) {
       blockReplacements.push({ block: block!, newBody: transformed });

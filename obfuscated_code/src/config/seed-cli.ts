@@ -13,8 +13,8 @@ export function applyCliSeedOverride(
 ): string | null {
   if (options.noSeed) return null;
   if (options.seed !== undefined) {
-    // commander --seed [seed] 无值时可能为 true
-    if (options.seed === true || options.seed === '') return null;
+    // commander 与 --seed [seed] 同用时，--no-seed 会写入 seed: false
+    if (options.seed === false || options.seed === true || options.seed === '') return null;
     if (typeof options.seed === 'string') return normalizeCliSeed(options.seed);
   }
   return configSeed;

@@ -12,11 +12,14 @@ const traverse = (_traverseModule.default ?? _traverseModule) as unknown as Trav
 
 function isFunctionBodyBlock(path: NodePath<t.BlockStatement>): boolean {
   const parent = path.parent;
+  // ObjectMethod / ClassMethod：Vue Options API computed/methods 与 UTS class 方法。
+  // 包在 if (true) 内会导致 UTS→Kotlin 编译失败（如 computed getter 出现 `{if (true) {`）。
+  if (parent.type === 'ObjectMethod' || parent.type === 'ClassMethod') {
+    return false;
+  }
   if (
     parent.type === 'FunctionDeclaration' ||
-    parent.type === 'FunctionExpression' ||
-    parent.type === 'ClassMethod' ||
-    parent.type === 'ObjectMethod'
+    parent.type === 'FunctionExpression'
   ) {
     return true;
   }
@@ -37,8 +40,8 @@ function isAlreadyFlattenWrapped(body: t.Statement[]): boolean {
 }
 
 /**
- * 轻量控制流平坦化：将函数体包在 if (true) { ... } 内。
- * 语义不变，增加阅读与静态分析成本；兼容 UTS / .uts 编译。
+ * 轻量控制流平坦化：将独立函数体包在 if (true) { ... } 内。
+ * 跳过 Vue Options API（ObjectMethod）与 class 方法（ClassMethod），避免 UTS 编译失败。
  */
 export function flattenControlFlow(ast: File): void {
   traverse(ast, {

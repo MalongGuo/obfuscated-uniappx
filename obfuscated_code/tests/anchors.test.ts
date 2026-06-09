@@ -6,7 +6,12 @@ import {
   rootAnchorBasenames,
   topLevelDirsFromExclude,
 } from '../src/path/anchors.js';
-import { isProtectedDirName, isProtectedName, isProtectedPath } from '../src/path/protected-names.js';
+import {
+  isProtectedDirName,
+  isProtectedName,
+  isProtectedPath,
+  isUtsPluginPath,
+} from '../src/path/protected-names.js';
 
 describe('topLevelDirsFromExclude', () => {
   it('does not exclude entire uni_modules for nested uni_modules/uni-* pattern', () => {
@@ -96,5 +101,15 @@ describe('isProtectedPath', () => {
     expect(isProtectedPath('pages/component/uni-badge')).toBe(false);
     expect(isProtectedPath('components/uni-card')).toBe(false);
     expect(isProtectedPath('pages/component/view')).toBe(false);
+  });
+});
+
+describe('isUtsPluginPath', () => {
+  it('matches uni_modules/uts-* plugin trees only', () => {
+    expect(isUtsPluginPath('uni_modules/uts-openSchema')).toBe(true);
+    expect(isUtsPluginPath('uni_modules/uts-openSchema/utssdk/interface.uts')).toBe(true);
+    expect(isUtsPluginPath('uni_modules/uts-openSystemSettings/utssdk/app-ios/index.uts')).toBe(true);
+    expect(isUtsPluginPath('uni_modules/uni-icons/components/icon.uvue')).toBe(false);
+    expect(isUtsPluginPath('components/demo.uvue')).toBe(false);
   });
 });

@@ -309,6 +309,55 @@ class Demo {
     expect(out).not.toBe(code.trim());
   });
 
+  it('SFC export default 的 junk 注入在组件对象内，不在模块顶层', () => {
+    const code = `
+export default {
+  name: "demo",
+  methods: {
+    onTap() { return 1; }
+  }
+};
+`;
+    const parsed = parseScript(code, 'typescript', 'components/demo.uvue');
+    const config = createDefaultConfig();
+    for (const key of Object.keys(config.features) as Array<keyof typeof config.features>) {
+      config.features[key] = false;
+    }
+    config.features.insertJunkFuncProp = true;
+    config.seed = 'sfc-junk-test';
+
+    const out = runScriptTransformPipeline(parsed.ast!, new Map(), config, code);
+    expect(out).toMatch(/_j[a-f0-9]{8}\s*\(\s*\)/);
+    expect(out).not.toMatch(/\};\s*function _j/);
+    expect(out).not.toMatch(/\};\s*_j[a-f0-9]{8}\s*\(\s*\)/);
+  });
+
+  it('uni_modules/uts-* 路径跳过 junk 注入', () => {
+    const code = 'export type OpenSchema = (url: string) => void;';
+    const parsed = parseScript(
+      code,
+      'typescript',
+      'uni_modules/uts-openSchema/utssdk/interface.uts',
+    );
+    const config = createDefaultConfig();
+    for (const key of Object.keys(config.features) as Array<keyof typeof config.features>) {
+      config.features[key] = false;
+    }
+    config.features.insertJunkFuncProp = true;
+    config.seed = 'uts-junk-skip';
+
+    const out = runScriptTransformPipeline(
+      parsed.ast!,
+      new Map(),
+      config,
+      code,
+      undefined,
+      'uni_modules/uts-openSchema/utssdk/interface.uts',
+    );
+    expect(out).toBe(code);
+    expect(out).not.toContain('_j');
+  });
+
   it('字符串加密替换字面量', () => {
     const code = 'const s = "hello";';
     const parsed = parseScript(code, 'typescript', 'demo.uts');

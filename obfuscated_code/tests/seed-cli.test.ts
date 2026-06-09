@@ -24,6 +24,7 @@ describe('normalizeCliSeed', () => {
 describe('applyCliSeedOverride', () => {
   it('--no-seed 优先于配置文件 seed', () => {
     expect(applyCliSeedOverride('layer1', { noSeed: true })).toBeNull();
+    expect(applyCliSeedOverride('layer1', { seed: false })).toBeNull();
   });
 
   it('--seed 覆盖配置文件', () => {
@@ -61,7 +62,7 @@ describe('loadConfig seed CLI override', () => {
       seed: 'layer1',
     });
 
-    const config = await loadConfig(root, { noSeed: true });
-    expect(config.seed).toBeNull();
+    expect((await loadConfig(root, { noSeed: true })).seed).toBeNull();
+    expect((await loadConfig(root, { seed: false })).seed).toBeNull();
   });
 });

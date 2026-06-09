@@ -45,7 +45,7 @@ function collectBasenameMappings(
   return map;
 }
 
-const SCOPED_REL_ROOTS = ['pages', 'components', 'store', 'windows', 'common'] as const;
+const SCOPED_REL_ROOTS = ['pages', 'components', 'store', 'windows', 'common', 'service'] as const;
 
 function buildRelativeImportVariants(basenameMap: Map<string, string>): PathReplacement[] {
   const reps: PathReplacement[] = [];
@@ -100,12 +100,19 @@ export function buildContentReplacements(
           `../../${from}/`,
           `../../../${from}/`,
           `/${from}/`,
+          `@/${from}`,
+          `@/${from}/`,
           `"${from}/`,
           `'${from}/`,
           `"./${from}/`,
           `'./${from}/`,
+          `"@/${from}"`,
+          `"@/${from}/"`,
+          `'@/${from}'`,
+          `'@/${from}/'`,
           `\`${from}/`,
           `\`/${from}/`,
+          `\`@/${from}/`,
           `node ${from}/`,
         ]
       : [
@@ -115,12 +122,16 @@ export function buildContentReplacements(
           `../../${from}`,
           `../../../${from}`,
           `/${from}`,
+          `@/${from}`,
           `'${from}'`,
           `"${from}"`,
           `'./${from}'`,
           `"./${from}"`,
+          `'@/${from}'`,
+          `"@/${from}"`,
           `\`${from}`,
           `\`/${from}`,
+          `\`@/${from}`,
           `pages/${from}`,
         ];
 
@@ -132,14 +143,33 @@ export function buildContentReplacements(
       let replacement = variant;
       if (variant === from) replacement = toPath;
       else if (variant === `${from}/`) replacement = toPath;
-      else if (variant.startsWith('./')) replacement = variant.replace(`${from}/`, `${to}/`).replace(from, to);
-      else if (variant.startsWith('../')) replacement = variant.replace(`${from}/`, `${to}/`).replace(from, to);
-      else if (variant.startsWith('/')) replacement = variant.replace(`${from}/`, `${to}/`).replace(from, to);
+      else if (variant.startsWith('./')) {
+        replacement = isSingleSegment
+          ? variant.replace(`${from}/`, `${to}/`)
+          : variant.replace(`${from}/`, `${to}/`).replace(from, to);
+      } else if (variant.startsWith('../')) {
+        replacement = isSingleSegment
+          ? variant.replace(`${from}/`, `${to}/`)
+          : variant.replace(`${from}/`, `${to}/`).replace(from, to);
+      } else if (variant.startsWith('@/')) {
+        replacement = isSingleSegment
+          ? variant.replace(`${from}/`, `${to}/`).replace(new RegExp(`${escapeRegex(from)}$`), to)
+          : variant.replace(`${from}/`, `${to}/`).replace(from, to);
+      } else if (variant.startsWith('/')) {
+        replacement = isSingleSegment
+          ? variant.replace(`${from}/`, `${to}/`)
+          : variant.replace(`${from}/`, `${to}/`).replace(from, to);
+      }
       else if (variant.startsWith('node ')) replacement = variant.replace(`${from}/`, `${to}/`);
       else if (variant.startsWith("'") || variant.startsWith('"')) {
-        replacement = variant[0] + (variant.slice(1).replace(`${from}/`, `${to}/`).replace(from, to));
+        const body = isSingleSegment
+          ? variant.slice(1).replace(`${from}/`, `${to}/`).replace(new RegExp(`${escapeRegex(from)}$`), to)
+          : variant.slice(1).replace(`${from}/`, `${to}/`).replace(from, to);
+        replacement = variant[0] + body;
       } else if (variant.startsWith('`')) {
-        replacement = variant.replace(`${from}/`, `${to}/`).replace(from, to);
+        replacement = isSingleSegment
+          ? variant.replace(`${from}/`, `${to}/`).replace(new RegExp(`${escapeRegex(from)}$`), to)
+          : variant.replace(`${from}/`, `${to}/`).replace(from, to);
       } else if (variant.startsWith('pages/')) {
         replacement = variant.replace(from, to);
       }
@@ -173,12 +203,20 @@ export function isTextFile(filePath: string): boolean {
 
 const SEGMENT_BOUNDARY = /[/"'`.]/;
 
+/** `./foo` 不能以 `.` 为前导边界，否则会误匹配 `../../foo` 中的 `./foo` 子串 */
+function segmentLookbehind(from: string): string {
+  if (from.startsWith('./')) {
+    return '[/"\'`|^]';
+  }
+  return `${SEGMENT_BOUNDARY.source}|^`;
+}
+
 function replacePathSegment(content: string, from: string, to: string): string {
   if (!from || from === to) return content;
 
   const escaped = escapeRegex(from);
   const regex = new RegExp(
-    `(?<=${SEGMENT_BOUNDARY.source}|^)${escaped}(?=${SEGMENT_BOUNDARY.source}|$)`,
+    `(?<=${segmentLookbehind(from)})${escaped}(?=${SEGMENT_BOUNDARY.source}|$)`,
     'g',
   );
   return content.replace(regex, to);

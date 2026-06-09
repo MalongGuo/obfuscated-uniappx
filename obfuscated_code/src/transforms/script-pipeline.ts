@@ -8,6 +8,7 @@ import { disruptExecutionOrder } from './disrupt-exec-order.js';
 import { encryptStringLiterals, type StringEncryptCollector } from './string-encryption.js';
 import { insertJunkClassProperties, insertJunkFunctions } from './junk-code.js';
 import { flattenControlFlow } from './control-flow.js';
+import { isUtsPluginPath } from '../path/protected-names.js';
 
 type GenerateFn = (
   ast: File,
@@ -24,6 +25,7 @@ export function runScriptTransformPipeline(
   config: ObfuscatorConfig,
   originalCode?: string,
   stringCollector?: StringEncryptCollector,
+  relativePath?: string,
 ): string {
   if (config.features.shuffleFuncOrder) {
     shuffleFunctionOrder(ast, config.seed);
@@ -37,7 +39,8 @@ export function runScriptTransformPipeline(
     disruptExecutionOrder(ast, config.seed);
   }
 
-  if (config.features.insertJunkFuncProp) {
+  const skipJunk = relativePath != null && isUtsPluginPath(relativePath);
+  if (config.features.insertJunkFuncProp && !skipJunk) {
     insertJunkFunctions(ast, config.seed);
     insertJunkClassProperties(ast, config.seed);
   }

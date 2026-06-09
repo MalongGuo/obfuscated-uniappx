@@ -7,9 +7,35 @@ function junkName(seed: string | null, index: number): string {
   return `_j${hash.slice(0, 8)}`;
 }
 
-/** 在文件末尾插入无副作用垃圾函数并调用一次 */
+function findExportDefaultObject(ast: File): t.ObjectExpression | null {
+  for (const node of ast.program.body) {
+    if (
+      node.type === 'ExportDefaultDeclaration' &&
+      node.declaration.type === 'ObjectExpression'
+    ) {
+      return node.declaration;
+    }
+  }
+  return null;
+}
+
+/** 插入无副作用垃圾函数。SFC export default 内嵌方法；纯 .uts 文件在模块顶层插入。 */
 export function insertJunkFunctions(ast: File, seed: string | null): void {
   const fnName = junkName(seed, ast.program.body.length);
+  const exportDefaultObj = findExportDefaultObject(ast);
+
+  if (exportDefaultObj) {
+    exportDefaultObj.properties.push(
+      t.objectMethod(
+        'method',
+        t.identifier(fnName),
+        [],
+        t.blockStatement([t.returnStatement(t.numericLiteral(0))]),
+      ),
+    );
+    return;
+  }
+
   const fn = t.functionDeclaration(
     t.identifier(fnName),
     [],

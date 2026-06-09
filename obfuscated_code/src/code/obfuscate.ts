@@ -116,7 +116,14 @@ async function obfuscateFile(
       const parsedFile = parseScript(updated, lang, file.relativePath);
       if (parsedFile.ast) {
         const mapForFile = config.features.renameFuncPropVarEnum ? renameMap : new Map();
-        const next = runScriptTransformPipeline(parsedFile.ast, mapForFile, config, updated, stringMappings);
+        const next = runScriptTransformPipeline(
+          parsedFile.ast,
+          mapForFile,
+          config,
+          updated,
+          stringMappings,
+          file.relativePath,
+        );
         astTransformed = next !== updated;
         identifierRenamed = astTransformed && renames.length > 0;
         updated = next;

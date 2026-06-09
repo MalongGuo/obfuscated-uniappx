@@ -3,7 +3,7 @@ export type ObfuscationScope = 'precise' | 'full';
 export type ObfuscationPreset = 'light' | 'medium' | 'heavy';
 export type NamingStyle = 'human' | 'hex';
 export type Platform = 'app-android' | 'app-ios' | 'app-harmony' | 'mp-weixin' | 'web';
-/** 输出目录命名：timestamp 含 unixMs；seed-stable 有 seed 时用 {项目}_{token} */
+/** 输出目录命名：已废弃，目录规则由 seed / --no-seed 决定；保留字段兼容旧配置 */
 export type OutputDirNaming = 'timestamp' | 'seed-stable';
 
 export interface FeatureFlags {
@@ -51,7 +51,7 @@ export interface ObfuscatorConfig {
   stableMode: boolean;
   forceNew: boolean;
   seed: string | null;
-  /** 默认 timestamp；seed-stable 且指定 seed 时输出 {项目}_{token} */
+  /** 已废弃：有 seed 时输出 {项目}_{token}，--no-seed 时含 unixMs */
   outputDirNaming: OutputDirNaming;
   outputDir: string;
   generateMap: boolean;

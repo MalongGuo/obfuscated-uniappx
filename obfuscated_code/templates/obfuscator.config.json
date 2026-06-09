@@ -21,6 +21,7 @@
     "components/**",
     "common/**",
     "store/**",
+    "service/**",
     "uni_modules/**",
     "*.uts",
     "*.uvue",
@@ -91,7 +92,7 @@
     "colorNudge": false,
     "shuffleFuncOrder": true,
     "disruptExecOrder": true,
-    "controlFlowFlatten": true,
+    "controlFlowFlatten": false,
     "useNewJunkCode": true,
     "ciphertextStrings": true,
     "renameProtocol": true

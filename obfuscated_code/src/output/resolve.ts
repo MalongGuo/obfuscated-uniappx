@@ -2,13 +2,14 @@ import path from 'node:path';
 import type { ObfuscatorConfig } from '../types/config.js';
 import { generateToken } from '../path/token.js';
 
-/** seed-stable 且指定 seed、且为默认 outputDir 时，输出 {项目}_{token} */
-export function shouldUseSeedStableOutputNaming(config: ObfuscatorConfig): boolean {
+/** 有 seed 且为默认 outputDir 时，输出 {项目}_{token}；--no-seed 时用 {项目}_{unixMs}_{token} */
+export function shouldUseSeedBasedOutputNaming(config: ObfuscatorConfig): boolean {
   if (config.outputDir && config.outputDir !== 'dist-obfuscated') return false;
-  if (config.outputDirNaming !== 'seed-stable') return false;
-  if (!config.seed) return false;
-  return true;
+  return Boolean(config.seed);
 }
+
+/** @deprecated 使用 shouldUseSeedBasedOutputNaming；保留别名兼容旧调用 */
+export const shouldUseSeedStableOutputNaming = shouldUseSeedBasedOutputNaming;
 
 export function resolvePathToken(config: ObfuscatorConfig): { token: string; auto: boolean } {
   const auto = config.pathPrefix === 'auto' || !config.pathPrefix;
@@ -23,6 +24,9 @@ export const LEGACY_OBFUSCATED_OUTPUT_DIR_PATTERN = /^(.+)_(\d{8})_(\d{6})_([^/]
 
 /** 新格式：{项目名}_{unixMs}_{token} */
 export const OBFUSCATED_OUTPUT_DIR_PATTERN = /^(.+)_(\d{10,13})_([^/]+)$/;
+
+/** seed 固定目录：{项目名}_{token}（token 16 位字母开头，无 unixMs） */
+export const SEED_BASED_OUTPUT_DIR_PATTERN = /^(.+)_([A-Za-z][A-Za-z0-9]{15})$/;
 
 /** 再次混淆时追加的 Unix 毫秒后缀：{已有目录名}_{unixMs} */
 const CHAINED_UNIX_SUFFIX_PATTERN = /^(.+)_(\d{10,13})$/;
@@ -57,6 +61,14 @@ function tryParseObfuscatedCore(basename: string): ParsedObfuscatedOutputDir | n
     };
   }
 
+  const seedBased = basename.match(SEED_BASED_OUTPUT_DIR_PATTERN);
+  if (seedBased) {
+    return {
+      projectName: seedBased[1]!,
+      token: seedBased[2]!,
+    };
+  }
+
   return null;
 }
 
@@ -87,24 +99,27 @@ export function formatOutputTimestamp(at = new Date()): string {
   return String(at.getTime());
 }
 
-/** 输出目录名：项目名称_{unixMs}_token 或 seed-stable 时 项目名称_token */
+/** 输出目录名：有 seed 时 项目名称_token；无 seed 时 项目名称_{unixMs}_token */
 export function buildOutputFolderName(
   projectPath: string,
   token: string,
   at = new Date(),
-  seedStable = false,
+  seedBased = false,
 ): string {
   const projectName = path.basename(path.resolve(projectPath));
-  if (seedStable) {
+  if (seedBased) {
     return `${projectName}_${token}`;
   }
   return `${projectName}_${formatOutputTimestamp(at)}_${token}`;
 }
 
-/** seed-stable 链式混淆时归一化为原始项目名 + token */
-export function buildSeedStableOutputFolderName(projectName: string, token: string): string {
+/** 有 seed 时链式混淆归一化为原始项目名 + token */
+export function buildSeedBasedOutputFolderName(projectName: string, token: string): string {
   return `${projectName}_${token}`;
 }
+
+/** @deprecated 使用 buildSeedBasedOutputFolderName */
+export const buildSeedStableOutputFolderName = buildSeedBasedOutputFolderName;
 
 export interface RunOutputPlan {
   outputPath: string;
@@ -134,8 +149,9 @@ function resolveRunToken(
 
 /**
  * run 输出目录规划：
- * - 源目录非混淆输出格式 → 自动生成 {项目}_{unixMs}_{token}
- * - 源目录符合混淆输出格式 → {源目录名}_{unixMs}，token/seed 取自源目录名
+ * - 有 seed → {项目}_{token}
+ * - --no-seed → {项目}_{unixMs}_{token}
+ * - 源目录已是混淆输出且无 seed → {源目录名}_{unixMs}
  */
 export function resolveRunOutputPlan(
   projectPath: string,
@@ -160,10 +176,10 @@ export function resolveRunOutputPlan(
   const parsed = parseObfuscatedOutputDirName(basename);
   if (parsed) {
     const { token, tokenAuto } = resolveRunToken(config, parsed.token);
-    const seedStable = shouldUseSeedStableOutputNaming(config);
-    if (seedStable) {
+    const seedBased = shouldUseSeedBasedOutputNaming(config);
+    if (seedBased) {
       return {
-        outputPath: path.resolve(parentDir, buildSeedStableOutputFolderName(parsed.projectName, token)),
+        outputPath: path.resolve(parentDir, buildSeedBasedOutputFolderName(parsed.projectName, token)),
         token,
         tokenAuto,
         seedFromSourceDir: parsed.token,
@@ -179,10 +195,10 @@ export function resolveRunOutputPlan(
     };
   }
 
-  const seedStable = shouldUseSeedStableOutputNaming(config);
+  const seedBased = shouldUseSeedBasedOutputNaming(config);
   const { token, auto } = resolvePathToken(config);
   return {
-    outputPath: resolveOutputPath(resolvedProject, config.outputDir, token, at, seedStable),
+    outputPath: resolveOutputPath(resolvedProject, config.outputDir, token, at, seedBased),
     token,
     tokenAuto: auto,
     seedFromSourceDir: null,
@@ -192,7 +208,7 @@ export function resolveRunOutputPlan(
 
 /**
  * 输出目录与项目同级。
- * 默认：{项目名称}_{unixMs}_{token}
+ * 有 seed：{项目名称}_{token}；无 seed：{项目名称}_{unixMs}_{token}
  * --output 指定非默认名时：与项目同级的指定目录
  */
 export function resolveOutputPath(
@@ -200,13 +216,13 @@ export function resolveOutputPath(
   outputDir: string,
   token: string,
   at = new Date(),
-  seedStable = false,
+  seedBased = false,
 ): string {
   const resolvedProject = path.resolve(projectPath);
   const parentDir = path.dirname(resolvedProject);
 
   if (!outputDir || outputDir === 'dist-obfuscated') {
-    return path.resolve(parentDir, buildOutputFolderName(resolvedProject, token, at, seedStable));
+    return path.resolve(parentDir, buildOutputFolderName(resolvedProject, token, at, seedBased));
   }
 
   if (path.isAbsolute(outputDir)) {
@@ -221,9 +237,9 @@ export function getOutputLabel(
   outputDir: string,
   token: string,
   at = new Date(),
-  seedStable = false,
+  seedBased = false,
 ): string {
-  const resolved = resolveOutputPath(projectPath, outputDir, token, at, seedStable);
+  const resolved = resolveOutputPath(projectPath, outputDir, token, at, seedBased);
   return path.basename(resolved);
 }
 

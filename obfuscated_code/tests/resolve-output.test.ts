@@ -29,7 +29,7 @@ describe('buildOutputFolderName', () => {
     );
   });
 
-  it('seed-stable 时省略 unixMs', () => {
+  it('有 seed 时省略 unixMs', () => {
     const at = new Date(2026, 5, 6, 11, 46, 23);
     expect(buildOutputFolderName('/tmp/uni-starter-x', 'abcToken123', at, true)).toBe(
       'uni-starter-x_abcToken123',
@@ -37,22 +37,27 @@ describe('buildOutputFolderName', () => {
   });
 });
 
-describe('shouldUseSeedStableOutputNaming', () => {
-  it('seed-stable + seed 且无 forceNew 时启用', () => {
+describe('shouldUseSeedBasedOutputNaming', () => {
+  it('有 seed 且默认 outputDir 时启用', () => {
     const config = createDefaultConfig();
-    config.outputDirNaming = 'seed-stable';
     config.seed = 'layer1';
     expect(shouldUseSeedStableOutputNaming(config)).toBe(true);
   });
 
   it('无 seed 或自定义 outputDir 时不启用', () => {
     const config = createDefaultConfig();
-    config.outputDirNaming = 'seed-stable';
     expect(shouldUseSeedStableOutputNaming(config)).toBe(false);
     config.seed = 'layer1';
     expect(shouldUseSeedStableOutputNaming(config)).toBe(true);
     config.outputDir = 'my-fixed-out';
     expect(shouldUseSeedStableOutputNaming(config)).toBe(false);
+  });
+
+  it('不依赖 outputDirNaming=seed-stable', () => {
+    const config = createDefaultConfig();
+    config.outputDirNaming = 'timestamp';
+    config.seed = 'layer1';
+    expect(shouldUseSeedStableOutputNaming(config)).toBe(true);
   });
 });
 
@@ -80,7 +85,7 @@ describe('resolveRunOutputPlan', () => {
     expect(plan.outputPath).toBe(
       `/workspace/uni-test_${at.getTime()}_${plan.token}`,
     );
-    expect(plan.token).toMatch(/^[A-Za-z0-9]{16}$/);
+    expect(plan.token).toMatch(/^[A-Za-z][A-Za-z0-9]{15}$/);
   });
 
   it('混淆输出目录作为源时，目标为 {源目录名}_{unixMs}，token 取自源目录名', () => {
@@ -114,9 +119,8 @@ describe('resolveRunOutputPlan', () => {
     expect(plan.tokenAuto).toBe(true);
   });
 
-  it('outputDirNaming=seed-stable 且指定 seed 时目录为 {项目}_{token}', () => {
+  it('有 seed 时目录为 {项目}_{token}（无需 outputDirNaming）', () => {
     const config = createDefaultConfig();
-    config.outputDirNaming = 'seed-stable';
     config.seed = 'layer1';
     const plan = resolveRunOutputPlan('/workspace/uni-starter-x', config, at);
     expect(plan.outputPath).toBe(
@@ -124,9 +128,8 @@ describe('resolveRunOutputPlan', () => {
     );
   });
 
-  it('seed-stable 再次混淆时归一化为 {原始项目}_{token}', () => {
+  it('有 seed 再次混淆时归一化为 {原始项目}_{token}', () => {
     const config = createDefaultConfig();
-    config.outputDirNaming = 'seed-stable';
     config.seed = 'layer1';
     const source = `/workspace/uni-starter-x_${at.getTime()}_oldToken1234567890`;
     const plan = resolveRunOutputPlan(source, config, at);
@@ -135,15 +138,23 @@ describe('resolveRunOutputPlan', () => {
     );
   });
 
-  it('seed-stable + forceNew 仍使用固定目录', () => {
+  it('有 seed 时 seed 固定目录再次 run 仍覆盖同一目录', () => {
     const config = createDefaultConfig();
-    config.outputDirNaming = 'seed-stable';
     config.seed = 'layer1';
     config.forceNew = true;
-    const plan = resolveRunOutputPlan('/workspace/uni-starter-x', config, at);
+    const source = `/workspace/uni-starter-x_${generateToken('layer1', 16)}`;
+    const plan = resolveRunOutputPlan(source, config, at);
     expect(plan.outputPath).toBe(
       `/workspace/${buildSeedStableOutputFolderName('uni-starter-x', generateToken('layer1', 16))}`,
     );
+  });
+
+  it('识别 seed 固定目录名 {项目}_{token}', () => {
+    expect(isObfuscatedOutputDirFormat('uni-starter-x_yPhMVaVR6HcrZm1R')).toBe(true);
+    expect(parseObfuscatedOutputDirName('uni-starter-x_yPhMVaVR6HcrZm1R')).toEqual({
+      projectName: 'uni-starter-x',
+      token: 'yPhMVaVR6HcrZm1R',
+    });
   });
 });
 
@@ -219,5 +230,18 @@ describe('generateToken', () => {
   it('always returns 16 characters', () => {
     expect(generateToken('uni-test-clone', 16)).toHaveLength(16);
     expect(generateToken(null, 16)).toHaveLength(16);
+  });
+
+  it('first character is always a letter (valid Vue component tag prefix)', () => {
+    for (let i = 0; i < 200; i++) {
+      const seeded = generateToken(`seed-${i}`, 16);
+      const random = generateToken(null, 16);
+      expect(seeded[0]).toMatch(/[A-Za-z]/);
+      expect(random[0]).toMatch(/[A-Za-z]/);
+    }
+  });
+
+  it('same seed yields deterministic token', () => {
+    expect(generateToken('layer1', 16)).toBe(generateToken('layer1', 16));
   });
 });

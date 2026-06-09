@@ -20,6 +20,13 @@ export function isProtectedPath(relPath: string): boolean {
   return /^uni_modules\/(uni-|uts-)[^/]+(\/|$)/.test(normalized);
 }
 
+/** uni_modules 下 uts-* 原生插件目录及其子路径 */
+export function isUtsPluginPath(relPath: string): boolean {
+  const normalized = normalizePath(relPath);
+  if (!normalized) return false;
+  return /^uni_modules\/uts-[^/]+(\/|$)/.test(normalized);
+}
+
 /** @deprecated 使用 isProtectedPath */
 export function isUniModulesPluginPath(relPath: string): boolean {
   return isProtectedPath(relPath);

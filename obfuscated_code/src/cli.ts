@@ -67,7 +67,7 @@ program
   .option('-o, --output <dir>', '输出目录名')
   .option('--seed [seed]', '随机种子；留空、none 或 null 表示不使用 seed')
   .option('--no-seed', '不使用 seed（覆盖配置文件）')
-  .option('--output-dir-naming <mode>', '输出目录命名: timestamp | seed-stable')
+  .option('--output-dir-naming <mode>', '已废弃：目录由 seed / --no-seed 决定')
   .option('--force-new', '强制生成新混淆名')
   .option('--stable', '固定混淆模式')
   .option('-v, --verbose', '详细日志')
