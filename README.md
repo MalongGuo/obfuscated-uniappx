@@ -1,13 +1,15 @@
 # uniapp-code
 
-UniApp-X 源码混淆工具与 **H5 自动化对比验证** 工作区。**CSS/JS（`--mode code`）L1–L4 全层混淆** 已通过 Playwright 对比验证（路由冒烟、交互爬链与 loading 样式）；**`--mode clone`** 路径混淆测试尚未通过。
+UniApp-X 源码混淆工具与 **H5 自动化对比验证** 工作区。**CSS/JS（`--mode code`）L1–L4 全层混淆** 与 **`--mode clone` 路径混淆** 均已通过主流程验证（Android 编译、H5 路由对比）；clone 子项 **tabbar_icon** 仍待修复。
 
 ## 测试状态
 
 | 测试项 | 说明 | 状态 |
 |--------|------|------|
 | CSS / JS（`--mode code`） | L1–L4 全层混淆 + H5 对比（路由 / loading） | ✅ 已通过 |
-| Clone（`--mode clone`） | 路径 clone + 静态资源 hash | ❌ 未通过 |
+| Clone（`--mode clone`） | 路径 clone + 静态资源 hash + Android / H5 路由对比 | ✅ 已通过 |
+| └ tabbar_icon | `pages.json` tabBar 图标路径与 static 映射一致 | ❌ 未通过 |
+| └ navigateTo + query | 带 query 的页面跳转 url 完整混淆 | ❌ 未通过（[详情](docs/clone-已知问题.md)） |
 
 ## 本仓库包含什么
 
@@ -156,7 +158,7 @@ node scripts/capture-dev-ports.mjs \
 | 命令 | 作用 |
 |------|------|
 | `run --mode code` | 代码混淆 + uvue/css 资源变换（**uni-starter-x 主流程，L1–L4 已验证**） |
-| `run --mode clone` | 路径 clone + 静态资源 hash（**测试未通过**） |
+| `run --mode clone` | 路径 clone + 静态资源 hash（**主流程已通过**；tabbar_icon 待修） |
 | `run --mode full` | 路径 + 静态 + 代码 + 资源（默认） |
 | `preload --mode <mode>` | 预分析（vocab / symbols / paths 等） |
 | `check / fix` | 产物自查与修复（`--mode` 须与 run 一致） |
@@ -167,6 +169,7 @@ node scripts/capture-dev-ports.mjs \
 ## 验证要点
 
 - **路由可达性**：源码与混淆端 smoke 路由状态一致（Playwright Tab 点击导航，非直链 goto）
+- **tabbar_icon**（clone）：tabBar `iconPath` / `selectedIconPath` 与 static 重命名后路径一致，H5 底部栏图标可正常加载
 - **Loading 样式**：`order`、`service-list` 页 loading overlay 与 flex dots 布局正常
 - **Header 高度**：`ux-header` 内联 `style["height"]` 不被 CSS class 重命名误伤（L4 字符串加密保留 key）
 - **登录**：compare 模式两端 localStorage 独立，有头模式下分别登录；CI 可用 `--no-prompt-login`

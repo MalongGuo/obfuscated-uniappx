@@ -67,6 +67,30 @@ describe('renameStaticImages', () => {
     const content = await fs.readFile(path.join(root, 'pages/x.uvue'), 'utf-8');
     expect(content).toContain('/static/a.png');
   });
+
+  it('三级 static 子目录（static/u/tabbar）文件名也加 token', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'obf-img-nested-'));
+    await fs.ensureDir(path.join(root, 'static/u/tabbar'));
+    await fs.writeFile(path.join(root, 'static/u/tabbar/home.png'), 'fake-png');
+    await fs.writeFile(path.join(root, 'static/u/tabbar/home_active.png'), 'fake-png');
+
+    const config = createDefaultConfig();
+    config.seed = 'static-nested-tabbar-test';
+
+    const { renameLog, imageCount } = await renameStaticImages(root, config);
+    expect(imageCount).toBe(2);
+
+    const homeRename = renameLog.find((r) => r.from === 'static/u/tabbar/home.png');
+    expect(homeRename).toBeTruthy();
+    expect(homeRename!.to).toMatch(
+      /^static\/[A-Za-z0-9]+u\/[A-Za-z0-9]+tabbar\/[A-Za-z0-9]+home\.png$/,
+    );
+    expect(await fs.pathExists(path.join(root, homeRename!.to))).toBe(true);
+
+    const activeRename = renameLog.find((r) => r.from === 'static/u/tabbar/home_active.png');
+    expect(activeRename).toBeTruthy();
+    expect(await fs.pathExists(path.join(root, activeRename!.to))).toBe(true);
+  });
 });
 
 describe('applyDirRenameMap', () => {
@@ -75,5 +99,13 @@ describe('applyDirRenameMap', () => {
       { from: 'static/test-image', to: 'static/TOKENtest-image' },
     ]);
     expect(mapped).toBe('static/TOKENtest-image/logo.png');
+  });
+
+  it('嵌套两层 static 子目录映射全部应用', () => {
+    const mapped = applyDirRenameMap('static/u/tabbar/home.png', [
+      { from: 'static/u/tabbar', to: 'static/u/TOKENtabbar' },
+      { from: 'static/u', to: 'static/TOKENu' },
+    ]);
+    expect(mapped).toBe('static/TOKENu/TOKENtabbar/home.png');
   });
 });

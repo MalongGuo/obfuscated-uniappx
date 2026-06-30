@@ -204,7 +204,7 @@ export function isTextFile(filePath: string): boolean {
   return TEXT_EXTENSIONS.has(ext);
 }
 
-const SEGMENT_BOUNDARY = /[/"'`.]/;
+const SEGMENT_BOUNDARY = /[/"'`.?&#]/;
 
 /** `./foo` 不能以 `.` 为前导边界，否则会误匹配 `../../foo` 中的 `./foo` 子串 */
 function segmentLookbehind(from: string): string {

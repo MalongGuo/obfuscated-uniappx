@@ -73,19 +73,24 @@ function planStaticDirRenames(subdirs: string[], token: string): PathRenamePair[
   return plans;
 }
 
-/** 按目录映射推算路径（仅 static/ 子目录） */
+/** 按目录映射推算路径（仅 static/ 子目录）；嵌套多层时逐轮应用最长前缀匹配 */
 export function applyDirRenameMap(relPath: string, dirRenames: PathRenamePair[]): string {
   let result = normalizeRel(relPath);
   const sorted = [...dirRenames].sort((a, b) => b.from.length - a.from.length);
-  for (const { from, to } of sorted) {
-    if (result === from) {
-      result = to;
-      break;
-    }
-    const prefix = `${from}/`;
-    if (result.startsWith(prefix)) {
-      result = `${to}${result.slice(from.length)}`;
-      break;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const { from, to } of sorted) {
+      if (result === from) {
+        result = to;
+        changed = true;
+        continue;
+      }
+      const prefix = `${from}/`;
+      if (result.startsWith(prefix)) {
+        result = `${to}${result.slice(from.length)}`;
+        changed = true;
+      }
     }
   }
   return result;

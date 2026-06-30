@@ -123,4 +123,18 @@ describe('route path replacements', () => {
       'import { ListBannerReq } from "../TOKENtypes"',
     );
   });
+
+  it('updates navigateTo url when route is followed by query string', () => {
+    const reps = buildContentReplacements([
+      {
+        from: 'pages/u/category/service-list/service-list',
+        to: 'pages/TOKENu/TOKENcategory/TOKENservice-list/TOKENservice-list',
+      },
+    ]);
+    const input =
+      'url: "/pages/u/category/service-list/service-list?categoryId=" + categoryId';
+    expect(applyReplacements(input, reps)).toBe(
+      'url: "/pages/TOKENu/TOKENcategory/TOKENservice-list/TOKENservice-list?categoryId=" + categoryId',
+    );
+  });
 });
