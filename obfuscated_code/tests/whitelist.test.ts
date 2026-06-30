@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'fs-extra';
-import { matchesIncludeScope } from '../src/path/whitelist.js';
+import { matchesIncludeScope, matchesPathWhitelist } from '../src/path/whitelist.js';
 import { getPackageConfigPath, getPackageRoot } from '../src/config/package-paths.js';
 import {
   getApiLiteralKeys,
@@ -76,5 +76,37 @@ describe('matchesIncludeScope', () => {
     expect(matchesIncludeScope('harmony-configs', UNI_TEST_INCLUDE)).toBe(false);
     expect(matchesIncludeScope('package', UNI_TEST_INCLUDE)).toBe(false);
     expect(matchesIncludeScope('windows', UNI_TEST_INCLUDE)).toBe(false);
+  });
+});
+
+describe('matchesPathWhitelist', () => {
+  const patterns = [
+    'pages',
+    'common',
+    'uni_modules/vk-uview-ui',
+    'pages/guide',
+    'common/config/**',
+  ];
+
+  it('single-segment patterns match only exact dir, not children', () => {
+    expect(matchesPathWhitelist('pages', patterns)).toBe(true);
+    expect(matchesPathWhitelist('pages/u', patterns)).toBe(false);
+    expect(matchesPathWhitelist('common', patterns)).toBe(true);
+    expect(matchesPathWhitelist('common/utils', patterns)).toBe(false);
+  });
+
+  it('multi-segment patterns match the subtree', () => {
+    expect(matchesPathWhitelist('uni_modules/vk-uview-ui', patterns)).toBe(true);
+    expect(matchesPathWhitelist('uni_modules/vk-uview-ui/components', patterns)).toBe(true);
+    expect(matchesPathWhitelist('uni_modules/vk-uview-ui/components/u-tabs', patterns)).toBe(true);
+    expect(matchesPathWhitelist('pages/guide', patterns)).toBe(true);
+    expect(matchesPathWhitelist('pages/guide/intro', patterns)).toBe(true);
+    expect(matchesPathWhitelist('pages/u', patterns)).toBe(false);
+  });
+
+  it('supports /** suffix patterns', () => {
+    expect(matchesPathWhitelist('common/config', patterns)).toBe(true);
+    expect(matchesPathWhitelist('common/config/env.uts', patterns)).toBe(true);
+    expect(matchesPathWhitelist('common/store', patterns)).toBe(false);
   });
 });

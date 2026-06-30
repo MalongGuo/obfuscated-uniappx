@@ -101,4 +101,26 @@ describe('route path replacements', () => {
       'import { treeCategory } from "@/TOKENservice/uts/TOKENuser/ai-category.uts"',
     );
   });
+
+  it('preserves index.uts suffix in @/ imports when parent dir is renamed', () => {
+    const reps = buildContentReplacements(
+      [{ from: 'store', to: 'TOKENstore' }],
+      new Set(['index']),
+    );
+    const input = 'import { getTheme } from "@/store/index.uts"';
+    expect(applyReplacements(input, reps)).toBe(
+      'import { getTheme } from "@/TOKENstore/index.uts"',
+    );
+  });
+
+  it('updates sibling ../basename imports when a directory is renamed', () => {
+    const reps = buildContentReplacements([
+      { from: 'service/uts/types', to: 'service/uts/TOKENtypes' },
+    ]);
+    const input =
+      'import { ListBannerReq } from "../types"';
+    expect(applyReplacements(input, reps)).toBe(
+      'import { ListBannerReq } from "../TOKENtypes"',
+    );
+  });
 });

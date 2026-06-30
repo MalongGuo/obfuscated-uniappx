@@ -99,6 +99,22 @@ describe('component tag sync', () => {
     expect(output).toContain('"leftWindow"');
   });
 
+  it('strips easycom block with 2-space indent (uni-starter-x style)', () => {
+    const input = `{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^ux-header$": "@/components/TOKENux-header/TOKENux-header.uvue"
+    },
+    "exclude": []
+  },
+  "pages": []
+}`;
+    const output = stripEasycomBlock(input);
+    expect(output).not.toContain('"easycom"');
+    expect(output).toContain('"pages"');
+  });
+
   it('resolves obfuscated main file by newDir basename', () => {
     const result = buildEasycomMappings(
       [{ from: 'components/u-link', to: 'components/TOKENu-link' }],

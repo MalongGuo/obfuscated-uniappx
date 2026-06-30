@@ -50,7 +50,10 @@ const SCOPED_REL_ROOTS = ['pages', 'components', 'store', 'windows', 'common', '
 function buildRelativeImportVariants(basenameMap: Map<string, string>): PathReplacement[] {
   const reps: PathReplacement[] = [];
   for (const [fromBase, toBase] of basenameMap) {
-    reps.push({ from: `./${fromBase}`, to: `./${toBase}` });
+    // Single-segment sibling imports (../types); avoid ../../basename — too easy to false-match.
+    for (const lead of ['./', '../']) {
+      reps.push({ from: `${lead}${fromBase}`, to: `${lead}${toBase}` });
+    }
   }
   return reps;
 }
@@ -207,6 +210,10 @@ const SEGMENT_BOUNDARY = /[/"'`.]/;
 function segmentLookbehind(from: string): string {
   if (from.startsWith('./')) {
     return '[/"\'`|^]';
+  }
+  if (from.startsWith('../')) {
+    // `../types` 只应匹配 import 路径起点，避免误伤 `../../request` 中的 `../request` 子串
+    return '["\'`|^]';
   }
   return `${SEGMENT_BOUNDARY.source}|^`;
 }

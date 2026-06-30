@@ -37,7 +37,9 @@ export function matchesPathWhitelist(fullDirPath: string, patterns: string[]): b
       if (regex.test(normalized)) return true;
       continue;
     }
-    if (normalized === p) return true;
+    // Multi-segment paths whitelist the whole subtree (e.g. uni_modules/vk-uview-ui/components).
+    // Single-segment entries (pages, common) stay exact-only so pages/u can still rename.
+    if (normalized === p || (p.includes('/') && normalized.startsWith(`${p}/`))) return true;
   }
   return false;
 }

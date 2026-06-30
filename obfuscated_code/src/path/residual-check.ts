@@ -42,6 +42,21 @@ function isPathLikePattern(pattern: string): boolean {
   return pattern.includes('/') || pattern.startsWith('./') || pattern.startsWith('\'./') || pattern.startsWith('"./');
 }
 
+function isCommentLine(line: string): boolean {
+  const trimmed = line.trim();
+  return trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*');
+}
+
+/** Avoid flagging `store.uts` / `service/request.uts` when the pattern is a directory segment. */
+function isFilenameSuffixFalsePositive(line: string, pattern: string): boolean {
+  const core = pattern.replace(/^['"`./]+|['"`]+$/g, '');
+  if (!core || core.includes('/')) return false;
+  const idx = line.indexOf(pattern);
+  if (idx < 0) return false;
+  const after = line[idx + pattern.length];
+  return after === '.';
+}
+
 function buildSearchPatterns(mappings: PathMapping[]): string[] {
   const patterns = new Set<string>();
 
@@ -124,8 +139,10 @@ export async function scanResidualPaths(
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]!;
+      if (isCommentLine(line)) continue;
       for (const pattern of patterns) {
         if (!line.includes(pattern)) continue;
+        if (isFilenameSuffixFalsePositive(line, pattern)) continue;
         if (isWhitelistedContext(pattern, pathWhitelist)) continue;
 
         const mapping = mappings.find((m) => m.from !== m.to && (

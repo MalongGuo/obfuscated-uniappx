@@ -6,6 +6,7 @@ import {
   buildDirSyncedFilename,
   buildRenamedFilename,
   containsDirNameSegment,
+  isBarrelEntryFilename,
   matchesDirFilename,
   obfuscateOrdinaryFilename,
   replaceDirNameInFilename,
@@ -33,6 +34,14 @@ describe('buildRenamedFilename', () => {
   it('obfuscates ordinary multi-dot filenames with token prefix', () => {
     expect(obfuscateOrdinaryFilename('a.b.c.d.js', 'TOKEN')).toBe('TOKENa.b.c.d.js');
     expect(buildRenamedFilename('helper.js', 'picker-view', 'TOKENpicker-view')).toBe('TOKENhelper.js');
+  });
+
+  it('preserves index.* barrel entry files for directory imports', () => {
+    expect(isBarrelEntryFilename('index.uts')).toBe(true);
+    expect(isBarrelEntryFilename('index.ts')).toBe(true);
+    expect(buildRenamedFilename('index.uts', 'types', 'TOKENtypes')).toBeNull();
+    expect(buildRenamedFilename('index.uts', 'utssdk', 'TOKENutssdk')).toBeNull();
+    expect(buildRenamedFilename('ai-base.uts', 'types', 'TOKENtypes')).toBe('TOKENai-base.uts');
   });
 
   it('detects dir name segments', () => {
@@ -242,6 +251,34 @@ describe('syncMatchingFilenames', () => {
 
     expect(fileRenames).toEqual([]);
     expect(await fs.pathExists(path.join(dirAbs, 'index.uts'))).toBe(true);
+    await fs.remove(root);
+  });
+
+  it('preserves service/uts/types/index.uts when types dir is renamed', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'file-rename-barrel-'));
+    const dirAbs = path.join(root, 'service', 'uts', 'TOKENtypes');
+    await fs.ensureDir(dirAbs);
+    await fs.writeFile(path.join(dirAbs, 'index.uts'), 'export type Foo = {}');
+    await fs.writeFile(path.join(dirAbs, 'ai-base.uts'), 'export type Bar = {}');
+
+    const logger = new Logger();
+    const fileRenames = await syncMatchingFilenamesForDir(
+      root,
+      'service/uts/types',
+      'service/uts/TOKENtypes',
+      logger,
+    );
+
+    expect(fileRenames).toEqual(
+      expect.arrayContaining([
+        {
+          from: 'service/uts/TOKENtypes/ai-base.uts',
+          to: 'service/uts/TOKENtypes/TOKENai-base.uts',
+        },
+      ]),
+    );
+    expect(await fs.pathExists(path.join(dirAbs, 'index.uts'))).toBe(true);
+    expect(await fs.pathExists(path.join(dirAbs, 'TOKENai-base.uts'))).toBe(true);
     await fs.remove(root);
   });
 

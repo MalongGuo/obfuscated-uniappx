@@ -93,7 +93,9 @@ export function buildContentReplacementGuard(
   rootAnchorFiles: readonly string[] = DEFAULT_ROOT_ANCHOR_FILES,
   rootAnchorDirs: readonly string[] = DEFAULT_ROOT_ANCHOR_DIRS,
 ): Set<string> {
-  return new Set([...rootAnchorBasenames(rootAnchorFiles), ...rootAnchorDirBasenames(rootAnchorDirs)]);
+  const guard = new Set([...rootAnchorBasenames(rootAnchorFiles), ...rootAnchorDirBasenames(rootAnchorDirs)]);
+  guard.add('index');
+  return guard;
 }
 
 /** 复制时始终保留的顶级目录（扫描 exclude 中的 obfuscated/** 不影响复制） */

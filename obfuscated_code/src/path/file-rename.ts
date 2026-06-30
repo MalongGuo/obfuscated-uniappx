@@ -14,6 +14,13 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** 目录导入入口文件（@/foo/bar 解析为 bar/index.uts），clone 阶段不可改名 */
+export function isBarrelEntryFilename(fileName: string): boolean {
+  const dot = fileName.indexOf('.');
+  if (dot <= 0) return false;
+  return fileName.slice(0, dot) === 'index';
+}
+
 /** 从混淆后目录名提取 token：TOKENpicker-view + picker-view → TOKEN */
 export function extractDirToken(oldDirName: string, newDirName: string): string {
   if (newDirName.endsWith(oldDirName) && newDirName.length > oldDirName.length) {
@@ -93,6 +100,7 @@ export function buildRenamedFilename(
   fileRelPath?: string,
 ): string | null {
   if (fileRelPath && isProtectedPath(fileRelPath)) return null;
+  if (isBarrelEntryFilename(fileName)) return null;
 
   if (matchesDirFilename(fileName, oldDirName)) {
     return buildDirSyncedFilename(fileName, oldDirName, newDirName);

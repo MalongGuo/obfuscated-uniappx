@@ -108,5 +108,12 @@ export function isTemplateFile(relFile: string): boolean {
 /** 移除 clone 早期写入的 easycom.custom，改由标签同步 + autoscan 解析 */
 export function stripEasycomBlock(content: string): string {
   if (!content.includes('"easycom"')) return content;
-  return content.replace(/\t"easycom"\s*:\s*\{[\s\S]*?\n\t\},?\n?/, '');
+  try {
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    if (!('easycom' in parsed)) return content;
+    const { easycom: _removed, ...rest } = parsed;
+    return `${JSON.stringify(rest, null, 2)}\n`;
+  } catch {
+    return content.replace(/^[ \t]*"easycom"\s*:\s*\{[\s\S]*?\n[ \t]*\},?\n/m, '');
+  }
 }
